@@ -1,0 +1,41 @@
+<% tasks.forEach(task=> { %>
+    <% if (!task.is_completed) { %>
+
+
+        <label>
+            <input class="checkbox" type="checkbox" id="progress" name="progress">
+        </label>
+
+        <div class="task-item__description">
+
+            <p> <%- task.taskName %> </p>
+            <small>
+                <%= task.category %>
+            </small>
+
+        </div>
+        <div class="task-item__buttons">
+
+            <button class="task-item_btn important">
+                <img src="/images/exclamation-mark-2.png" alt="">
+            </button>
+
+            <button class="task-item_btn task-settings-icon">
+                <img src="/images/settings.png" alt="">
+            </button>
+            <button class="task-item_btn close">&#10006;</button>
+
+            <div class="task-item__settings">
+
+                <button class="task-item_btn edit">
+                    <img src="/images/edit-icon.png" alt="">
+                </button>
+                <button class="task-item_btn delete">
+                    <img src="/images/delete.png" alt="">
+                </button>
+            </div>
+
+        </div>
+        <% } %>
+
+            <% }); %>

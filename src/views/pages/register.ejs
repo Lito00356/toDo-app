@@ -1,0 +1,18 @@
+<section class="auth-container register">
+    <h4>Register</h4>
+    <%- include('../partials/form-errors') %>
+        <form method="post" action="register">
+            <% locals.inputs?.forEach(input=> { %>
+                <%- include('../partials/form-input', input) %>
+                    <% }); %>
+
+                        <div class="footer-container">
+                            <div class="footer-container-left">
+                                <input type="submit" class="btn btn--register-login" value="Register">
+                            </div>
+                            <div class="footer-container-right">
+                                <a href="/login">Back to login</a>
+                            </div>
+                        </div>
+        </form>
+</section>

@@ -1,0 +1,62 @@
+.task-item__settings {
+  position: absolute;
+  top: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: top 0.3s ease-out, opacity 0.3s ease;
+}
+
+.task-item__settings.open {
+  top: 55px;
+  z-index: 1;
+  opacity: 1;
+  display: block;
+}
+
+.task-settings-icon {
+  opacity: 1;
+  z-index: 1;
+  transform: rotate(0);
+  transition: transform 0.3s ease, opacity 0.4s ease;
+}
+
+.task-settings-icon.open {
+  transform: rotate(180deg);
+  transform: scale(0.8);
+  opacity: 0;
+  z-index: 0;
+}
+
+.category__list-settings-btn {
+  opacity: 1;
+  z-index: 1;
+  transform: rotate(0);
+  transition: transform 0.3s ease, opacity 0.4s ease;
+}
+
+.category__list-settings-btn.open {
+  transform: rotate(180deg);
+  transform: scale(0.8);
+  opacity: 0;
+  z-index: 0;
+}
+
+.close {
+  position: absolute;
+
+  right: 0;
+  opacity: 0;
+  z-index: 0;
+  transform: rotate(-180deg);
+  transition: transform 0.4s ease-out, opacity 0.4s ease;
+}
+
+.close.open {
+  opacity: 1;
+  z-index: 1;
+  transform: rotate(0);
+}
+
+.delete {
+  max-width: 1.875rem;
+}

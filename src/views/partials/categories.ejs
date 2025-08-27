@@ -1,0 +1,13 @@
+<% let categoriesList={}; for (const category of categories) { if (!categoriesList[category.category]){ categoriesList[category.category]=[]; categoriesList[category.category].push(category); } else { categoriesList[category.category].push(category); }} %>
+
+
+    <% for (const category of Object.keys(categoriesList)) { %>
+        <button class="category__list-item-btn">
+
+            <%= category %>
+                <span class="category__list-item-count">
+                    <%= categoriesList[category].length %>
+                </span>
+        </button>
+
+        <% } %>

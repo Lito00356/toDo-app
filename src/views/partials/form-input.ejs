@@ -1,0 +1,15 @@
+<div class="input-container">
+    <label for="<%= name %>">
+        <%= label %>
+    </label>
+    <% if (type==="textarea" ) { %>
+        <textarea name="<%= name %>"><%= locals.value %></textarea>
+        <% } else { %>
+            <input type="<%= type %>" name="<%= name %>" value="<%= locals.value %>">
+            <% } %>
+                <% if (locals.err) { %>
+                    <div class="error">
+                        <%= err %>
+                    </div>
+                    <% } %>
+</div>

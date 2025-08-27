@@ -1,0 +1,85 @@
+<div class="container-100">
+
+    <%- include("../partials/title") %>
+
+        <div class="category-container">
+            <div class="app-user">
+                <%- include("../partials/user") %>
+                    <button class="button">
+                        <img class="button__logout logout" id="logout-icon" src="/icons/log-out.png" alt="icon for logout">
+                    </button>
+            </div>
+            <div class="category-window">
+                <h2 class="category__title">Categories</h2>
+
+                <form class="form form--create-category" id="create-category" method="POST">
+                    <label class="form__wrapper">
+                        Want to add a new category?
+                        <input class="form__input" type="text" required>
+                    </label>
+                    <button class="button form__button" id="cancel-create-category" type="button">Cancel</button>
+                    <button class="button form__button" id="create-category">Create</button>
+                </form>
+
+                <form class="form form--edit-category" id="edit-category" method="POST">
+                    <label class="form__wrapper">
+                        Want to edit the category?
+                        <input class="form__input" type="text" required>
+                    </label>
+                    <button class="button form__button" id="cancel-edit-category" type="button">Cancel</button>
+                    <button class="button form__button" id="edit-category">OK</button>
+                </form>
+
+                <div class="category__list-container">
+
+                </div>
+                <button class="category__list-item-add"> + Category</button>
+            </div>
+        </div>
+</div>
+
+<div class="task-window">
+
+    <form method="GET">
+        <button class="button logout account__logout">Logout</button>
+    </form>
+
+    <div class="task-window__category-bg">
+        <img class="category-bg__image" src="/images/bg_rotated.jpg" alt="backgroudn image">
+        <h2 class="category-bg__title">All tasks</h2>
+    </div>
+
+
+    <h2 class="task-status">Pending</h2>
+    <dialog class="dialog">
+        <p>Are you sure you want to delete this item? </p>
+        <div class="dialog__confirmation">
+            <button id="close-dialog">Cancel</button>
+            <button id="confirm-delete">Ok</button>
+        </div>
+    </dialog>
+    <form class="form form-edit" id="edit-task" method="PATCH">
+        <label class="form__wrapper">
+            Edit the task?
+            <input class="form__input" id="task-name" type="text" value="">
+        </label>
+        <button class="button form__button" id="cancel-edit-task" type="button">Cancel</button>
+        <button class="button form__button" id="ok-edit">Ok</button>
+    </form>
+    <section class="tasks-container pending">
+
+    </section>
+
+    <form class="form form--create-task" id="form-task" method="POST">
+
+    </form>
+
+    <div class="add-task-container">
+        <button class="btn-add-task">+</button>
+    </div>
+
+    <h2 class="task-status">Done</h2>
+    <section class="tasks-container completed">
+
+    </section>
+</div>
