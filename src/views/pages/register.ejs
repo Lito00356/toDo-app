@@ -1,18 +1,21 @@
-<section class="auth-container register">
-    <h4>Register</h4>
-    <%- include('../partials/form-errors') %>
-        <form method="post" action="register">
-            <% locals.inputs?.forEach(input=> { %>
-                <%- include('../partials/form-input', input) %>
-                    <% }); %>
+<div class="auth-card">
+    <div class="auth-brand">
+        <div class="auth-brand__name">Tracking Marker</div>
+        <div class="auth-brand__tagline">Get things done</div>
+    </div>
 
-                        <div class="footer-container">
-                            <div class="footer-container-left">
-                                <input type="submit" class="btn btn--register-login" value="Register">
-                            </div>
-                            <div class="footer-container-right">
-                                <a href="/login">Back to login</a>
-                            </div>
-                        </div>
-        </form>
-</section>
+    <h2 class="auth-title">Create account</h2>
+
+    <%- include('../partials/form-errors') %>
+
+    <form class="auth__form" method="post" action="register">
+        <% locals.inputs?.forEach(input => { %>
+            <%- include('../partials/form-input', input) %>
+        <% }); %>
+
+        <div class="auth-footer">
+            <input type="submit" class="btn btn--submit" value="Register">
+            <a class="auth-link" href="/login">Back to login</a>
+        </div>
+    </form>
+</div>

@@ -1,45 +1,71 @@
 const API_URL = "http://localhost:2007";
 
+// ============ TOAST ============
+
+function showToast(message, type = "success") {
+  let $container = document.querySelector(".toast-container");
+  if (!$container) {
+    $container = document.createElement("div");
+    $container.className = "toast-container";
+    document.body.appendChild($container);
+  }
+
+  const $toast = document.createElement("div");
+  $toast.className = `toast toast--${type}`;
+  $toast.textContent = message;
+  $container.appendChild($toast);
+
+  setTimeout(() => {
+    $toast.classList.add("toast--out");
+    $toast.addEventListener("animationend", () => $toast.remove(), { once: true });
+  }, 3000);
+}
+
+// ============ API HELPER ============
+
+async function apiFetch(path, method = "GET", body = null) {
+  const options = {
+    method,
+    headers: { "Content-Type": "application/json" },
+  };
+  if (body !== null) options.body = JSON.stringify(body);
+  const response = await fetch(`${API_URL}${path}`, options);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Unknown error");
+  return data;
+}
+
+// ============ FETCH ============
+
 async function fetchCategories() {
   try {
-    const categories = await fetch(`${API_URL}/api/categories`);
-    const categoriesData = await categories.json();
-
-    if (!categoriesData) {
-      return;
-    }
-
-    return categoriesData;
+    return await apiFetch("/api/categories");
   } catch (error) {
     console.error("Error fetching categories:", error);
   }
 }
 
+// ============ RENDER ============
+
 const $categoryContainer = document.querySelector(".category__list-container");
 
 function createCategoriesList(categories, tasks) {
-  const categoryArray = createCategoryArray(categories);
-  let counter = 0;
+  let totalCount = 0;
   let html = "";
 
   for (const category of categories) {
-    counter += category.tasks.length;
+    totalCount += category.tasks.length;
     html += `
-    <article class="category__list-item" data-title="${category.category}" id="category-nav-${category.id}">
+    <article class="category__list-item" data-id="${category.id}" data-title="${category.category}" id="category-nav-${category.id}">
         <button class="button category__list-item-btn" data-title="${category.category}" id="${category.id}">
             ${category.category}
         </button>
-
         <div class="category__list-settings">
             <span class="category__list-item-count">${category.tasks.length}</span>
-
             <button class="button category__list-settings-btn" id="${category.id}">
                 <img class="button__icon" src="/images/settings.png" alt="settings logo">
             </button>
-            <button class="button category__list-settings-btn close">
-            &#10006;
-            </button>
-
+            <button class="button category__list-settings-btn close">&#10006;</button>
             <div class="category__list-actions">
                 <button class="button category__list-edit-btn" id="${category.id}">
                     <img class="button__icon-action" src="/images/edit-icon.png" alt="edit logo">
@@ -53,281 +79,180 @@ function createCategoriesList(categories, tasks) {
     `;
   }
 
-  let allCategories = `
+  const allCategoriesItem = `
   <article class="category__list-item">
     <button class="button category__list-item-btn" id="0">
-    All tasks
-      <span class="category__list-item-count counter">
-      ${counter}
-    </span>
+      All tasks
+      <span class="category__list-item-count counter">${totalCount}</span>
     </button>
   </article>
   `;
-  $categoryContainer.innerHTML = allCategories + html;
-  const $categoryName = document.querySelectorAll(".category__list-item-btn");
 
-  addEventListenerToCategory($categoryName, categoryArray, tasks);
+  $categoryContainer.innerHTML = allCategoriesItem + html;
+
   addEventListenerToSettings($categoryContainer);
+  addEventListenerToCategory(document.querySelectorAll(".category__list-item-btn"));
 }
 
-function addClasslistForCategorySettings($categoryItem, $categoryModifiers, $target, $closeButton, id) {
-  $categoryItem.classList.add("open");
-  $categoryModifiers.classList.add("open");
-  $target.classList.add("open");
-  $closeButton.classList.add("open");
-}
-
-function removeClasslistForCategorySettings($closeButton, $categoryItem, $categoryModifiers, $categorySettings) {
-  $categoryItem.classList.remove("open");
-  $categoryModifiers.classList.remove("open");
-  $categorySettings.classList.remove("open");
-  $closeButton.classList.remove("open");
-}
-
-function initEditCategory($categoryItem, $editCategoryForm, id) {
-  $editCategoryForm.classList.add("open");
-  initFormCategoryEdit($editCategoryForm, id);
-}
-
-function updateCategoryTaskCounter(categories) {
-  const $taskCounter = document.querySelector(".category__list-item-count");
-  let counter = 0;
-  let html = "";
-  for (const category of categories) {
-    counter += category.tasks.length;
-    html += category.tasks.length;
-  }
-  $taskCounter.innerHTML = html;
-}
+// ============ SETTINGS PANEL ============
 
 function addEventListenerToSettings($container) {
   $container.addEventListener("click", async function (event) {
-    const $target = event.target.closest(".category__list-settings-btn");
-    if ($target) {
-      const $categoryItem = $target.closest(".category__list-item");
-      const $categoryModifiers = $categoryItem.querySelector(".category__list-actions");
-      const $closeButton = $categoryItem.querySelector(".close");
-
-      addClasslistForCategorySettings($categoryItem, $categoryModifiers, $target, $closeButton);
+    // Settings button (exclude the close button which shares the class)
+    const $settingsBtn = event.target.closest(".category__list-settings-btn:not(.close)");
+    if ($settingsBtn) {
+      const $categoryItem = $settingsBtn.closest(".category__list-item");
+      $categoryItem.classList.add("open");
+      $categoryItem.querySelector(".category__list-actions").classList.add("open");
+      $settingsBtn.classList.add("open");
+      $categoryItem.querySelector(".close").classList.add("open");
     }
+
+    // Close button — use $closeButton (not $settingsBtn) to avoid the original null-reference bug
     const $closeButton = event.target.closest(".close");
     if ($closeButton) {
-      const $categoryItem = $target.closest(".category__list-item");
-      const $categoryModifiers = $categoryItem.querySelector(".category__list-actions");
-      const $categorySettings = $categoryItem.querySelector(".category__list-settings-btn");
-
-      removeClasslistForCategorySettings($closeButton, $categoryItem, $categoryModifiers, $categorySettings);
-    }
-    const $deleteTarget = event.target.closest(".category__list-delete-btn");
-    if ($deleteTarget) {
-      const categoryID = $deleteTarget.getAttribute("id");
-      const $className = $deleteTarget.className;
-      console.log("hier zit een probleem!!");
-
-      openConfirmation(null, categoryID, $className);
+      const $categoryItem = $closeButton.closest(".category__list-item");
+      $categoryItem.classList.remove("open");
+      $categoryItem.querySelector(".category__list-actions").classList.remove("open");
+      $categoryItem.querySelector(".category__list-settings-btn:not(.close)").classList.remove("open");
+      $closeButton.classList.remove("open");
     }
 
-    const $editTarget = event.target.closest(".category__list-edit-btn");
-    if ($editTarget) {
-      const $categoryItem = $editTarget.closest(".category__list-item");
-      const categoryID = $editTarget.getAttribute("id");
-      const $editCategoryForm = document.querySelector(".form--edit-category");
-      initEditCategory($categoryItem, $editCategoryForm, categoryID);
+    const $deleteBtn = event.target.closest(".category__list-delete-btn");
+    if ($deleteBtn) {
+      const categoryID = $deleteBtn.getAttribute("id");
+      openConfirmation(null, categoryID, "category__list-delete-btn");
+    }
+
+    const $editBtn = event.target.closest(".category__list-edit-btn");
+    if ($editBtn) {
+      startInlineEditCategory($editBtn.closest(".category__list-item"));
     }
   });
 }
 
+// ============ INLINE EDIT (CATEGORY) ============
+
+function startInlineEditCategory($categoryItem) {
+  if ($categoryItem.classList.contains("editing")) return;
+  $categoryItem.classList.add("editing");
+
+  const $nameBtn = $categoryItem.querySelector(".category__list-item-btn");
+  const currentName = $nameBtn.textContent.trim();
+  const categoryID = $categoryItem.dataset.id;
+
+  const $editWrapper = document.createElement("div");
+  $editWrapper.className = "category__inline-edit";
+  $editWrapper.innerHTML = `
+    <input class="category__edit-input" type="text" value="${currentName}">
+    <button class="button category__edit-save" type="button">OK</button>
+    <button class="button category__edit-cancel" type="button">&#10006;</button>
+  `;
+  $nameBtn.replaceWith($editWrapper);
+
+  const $input = $editWrapper.querySelector(".category__edit-input");
+  const $saveBtn = $editWrapper.querySelector(".category__edit-save");
+  const $cancelBtn = $editWrapper.querySelector(".category__edit-cancel");
+
+  $input.focus();
+  $input.select();
+
+  $saveBtn.addEventListener("click", async function () {
+    const newName = $input.value.trim();
+    if (newName && newName !== currentName) {
+      await editCategory({ category: newName }, categoryID);
+      showToast("Category updated");
+    }
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
+    createCategoriesList(categories, tasks);
+  });
+
+  $cancelBtn.addEventListener("click", async function () {
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
+    createCategoriesList(categories, tasks);
+  });
+
+  $input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") $saveBtn.click();
+    if (e.key === "Escape") $cancelBtn.click();
+  });
+}
+
+// ============ CRUD ============
+
 async function deleteCategory(content, categoryID) {
   try {
-    const response = await fetch(`${API_URL}/api/categories/${categoryID}`, {
-      method: "DELETE",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-
-    const categories = await fetchCategories();
-    const tasks = await fetchAllTasks();
-
+    await apiFetch(`/api/categories/${categoryID}`, "DELETE", content);
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
     createCategoriesList(categories, tasks);
-    selectAllTasks(categories);
+    renderTasks(tasks, 0);
+    updateCategoryTitle("All tasks");
   } catch (error) {
-    console.error("Something went wrong: " + error);
-  }
-}
-
-function selectAllTasks(categories) {
-  const catArr = createCategoryArray(categories);
-  updateTasksHTML(0);
-  updateCategoryTitle(catArr[0]);
-}
-
-function initFormCategoryEdit($editCategoryForm, categoryID) {
-  console.log($editCategoryForm);
-  if ($editCategoryForm) {
-    $editCategoryForm.addEventListener("submit", async function (event) {
-      event.preventDefault();
-      const $categoryName = $editCategoryForm.querySelector(".form__input");
-
-      await editCategory(
-        {
-          category: $categoryName.value,
-        },
-        categoryID
-      );
-
-      const categories = await fetchCategories();
-      createCategoriesList(categories);
-      $editCategoryForm.reset();
-      $editCategoryForm.classList.remove("open");
-
-      window.location.href = "http://localhost:2007/category/" + categoryID;
-    });
+    console.error("Error deleting category:", error);
   }
 }
 
 async function editCategory(content, categoryID) {
   try {
-    const response = await fetch(`${API_URL}/api/categories/${categoryID}`, {
-      method: "PATCH",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-    return data;
+    return await apiFetch(`/api/categories/${categoryID}`, "PATCH", content);
   } catch (error) {
-    console.error("Something went wrong: " + error);
-  }
-}
-
-function createCategoryArray(categories) {
-  const categoriesList = ["All tasks"];
-  for (const category of categories) {
-    categoriesList.push(category.category);
-  }
-  const capitalizedCategories = categoriesList.map((category) => {
-    return category.charAt(0).toUpperCase() + category.slice(1);
-  });
-
-  return capitalizedCategories;
-}
-
-function createCategoriesDropDown(categories) {
-  let html = "";
-  for (const category of categories) {
-    html += `
-    <option value="${category.category}">${category.category}</option>
-    `;
-  }
-  return html;
-}
-
-const $categoryTitle = document.querySelector(".category-bg__title");
-
-function updateCategoryTitle(categoryArray) {
-  $categoryTitle.textContent = categoryArray;
-}
-
-function makeActive($article) {
-  const $categoryItems = document.querySelectorAll(".category__list-item");
-  $categoryItems.forEach((item) => {
-    item.classList.remove("active");
-  });
-
-  $article.classList.add("active");
-}
-
-let globalCategoryID = 0;
-
-function addEventListenerToCategory(categories, array) {
-  categories.forEach((category, index) => {
-    category.addEventListener("click", function (event) {
-      const currentTarget = event.currentTarget.getAttribute("id");
-      const categoryName = event.currentTarget.dataset.title;
-      const $button = event.target.closest(".category__list-item-btn");
-
-      if ($button) {
-        const $article = $button.closest(".category__list-item");
-        // makeActive($article);
-        window.location.href = currentTarget != "0" ? "/category/" + currentTarget : "/";
-      }
-      if (currentTarget) {
-        globalCategoryID = currentTarget;
-        updateCategoryTitle(categoryName);
-        updateTasksHTML(currentTarget);
-      }
-    });
-  });
-}
-
-const $formCreateCategory = document.querySelector(".form--create-category");
-
-function initFormCategoryCreation() {
-  if ($formCreateCategory) {
-    $formCreateCategory.addEventListener("submit", async function (event) {
-      const $category = $formCreateCategory.querySelector(".form__input");
-      const slug = slugCreation($category.value);
-
-      event.preventDefault();
-
-      await createCategory({
-        category: $category.value,
-        slug: slug,
-      });
-
-      const tasks = await fetchAllTasks();
-      const categories = await fetchCategories();
-      createCategoriesList(categories, tasks);
-      createCategoryArray(categories);
-      createCategoriesDropDown(categories);
-      hideCreateCategoryWindow();
-      initFormTaskCreation(categories);
-    });
+    console.error("Error editing category:", error);
   }
 }
 
 async function createCategory(content) {
   try {
-    const response = await fetch(`${API_URL}/api/categories`, {
-      method: "POST",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Uknown error"}`);
-    }
-    const categories = await fetchCategories();
-    createCategoryArray(categories);
+    return await apiFetch("/api/categories", "POST", content);
   } catch (error) {
-    console.log("Something went wrong: " + error);
+    console.error("Error creating category:", error);
   }
 }
 
-function slugCreation(slugContent) {
-  const lowerCaseSlugcontent = slugContent.toLowerCase();
-  const splitMultipleWords = lowerCaseSlugcontent.split(" ");
-  const sluggify = splitMultipleWords.join("-");
+// ============ HELPERS ============
 
-  return sluggify;
+function createCategoryArray(categories) {
+  return ["All tasks", ...categories.map((c) => c.category.charAt(0).toUpperCase() + c.category.slice(1))];
 }
 
+function createCategoriesDropDown(categories) {
+  return categories.map((c) => `<option value="${c.id}">${c.category}</option>`).join("");
+}
+
+function slugCreation(slugContent) {
+  return slugContent.toLowerCase().split(" ").join("-");
+}
+
+// ============ UI HELPERS ============
+
+const $categoryTitle = document.querySelector(".category-bg__title");
+
+function updateCategoryTitle(title) {
+  $categoryTitle.textContent = title || "All tasks";
+}
+
+function makeActive($article) {
+  document.querySelectorAll(".category__list-item").forEach((item) => item.classList.remove("active"));
+  $article.classList.add("active");
+}
+
+let globalCategoryID = 0;
+
+function addEventListenerToCategory(categoryBtns) {
+  categoryBtns.forEach((btn) => {
+    btn.addEventListener("click", function (event) {
+      const $button = event.target.closest(".category__list-item-btn");
+      if (!$button) return;
+
+      const id = $button.getAttribute("id");
+      globalCategoryID = id;
+      window.location.href = id !== "0" ? "/category/" + id : "/";
+    });
+  });
+}
+
+// ============ CREATE CATEGORY FORM ============
+
+const $formCreateCategory = document.querySelector(".form--create-category");
 const $btnAddCategory = document.querySelector(".category__list-item-add");
 const $btnCancelCategoryCreate = document.getElementById("cancel-create-category");
 
@@ -340,36 +265,24 @@ $btnAddCategory.addEventListener("click", function () {
   $formCreateCategory.classList.add("show");
 });
 
-$btnCancelCategoryCreate.addEventListener("click", function (event) {
+$btnCancelCategoryCreate.addEventListener("click", function () {
   hideCreateCategoryWindow();
 });
 
-function printCategories(categories) {
-  for (const category of categories) {
-    console.log(category.users_id);
-  }
+function initFormCategoryCreation() {
+  if (!$formCreateCategory) return;
+
+  $formCreateCategory.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const $input = $formCreateCategory.querySelector(".form__input");
+    const name = $input.value.trim();
+
+    await createCategory({ category: name, slug: slugCreation(name) });
+    showToast("Category created!");
+
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
+    createCategoriesList(categories, tasks);
+    hideCreateCategoryWindow();
+    initFormTaskCreation(categories);
+  });
 }
-// ========= RUN SCRIPT =========
-(async function init() {
-  const categories = await fetchCategories();
-  const tasks = await fetchAllTasks();
-
-  createTaskList(tasks, categories);
-  // printCategories(categories);
-  initFormCategoryCreation();
-  initFormTaskCreation(categories);
-  createCategoriesList(categories, tasks);
-
-  const urlParts = window.location.pathname.split("/");
-
-  if (urlParts.length >= 3 && urlParts[1] === "category") {
-    console.log("ID:", urlParts[2]);
-    const id = urlParts[2];
-
-    const $article = document.getElementById("category-nav-" + id);
-    $article.classList.add("active");
-
-    updateCategoryTitle($article.dataset.title);
-    updateTasksHTML(id);
-  }
-})();

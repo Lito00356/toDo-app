@@ -10,7 +10,7 @@
     "db:seed": "knex seed:run",
     "start:dev": "nodemon src/app.js"
   },
-  "author": "Tomasz Liksza",
+  "author": "Lito",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.1.9"

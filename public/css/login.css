@@ -1,60 +1,141 @@
-body {
-  font-family: "Roboto", sans-serif;
-}
-
-a {
-  color: black;
-  text-decoration: none;
-  border: 1px solid hsl(0, 0%, 15%);
-  padding: 0.15rem 0.35rem;
-  border-radius: 2px;
-}
-
-.btn:hover {
-  transform: scale(1.075);
-}
-
-.footer-container-right:hover {
-  scale: 1.075;
-}
-
-.auth-container {
-  height: 100dvh;
-  width: 80%;
-  margin: 0 auto;
+/* ── Page background ── */
+#authentication {
+  min-height: 100dvh;
+  background: linear-gradient(135deg, hsl(352, 60%, 42%) 0%, hsl(275, 45%, 18%) 100%);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  font-family: "Roboto", sans-serif;
+  padding: 1.5rem;
 }
 
-.auth__form {
-  display: flex;
-  flex-direction: column;
-  align-content: space-around;
-  flex-wrap: wrap;
-  gap: 1rem;
+/* ── Card ── */
+.auth-card {
+  background: white;
+  border-radius: 1.25rem;
+  padding: 2.5rem 2.5rem 2rem;
+  width: 100%;
+  max-width: 22rem;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.3);
 }
 
+/* ── Brand header ── */
+.auth-brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-brand__name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: hsl(352, 55%, 48%);
+  letter-spacing: -0.02em;
+}
+
+.auth-brand__tagline {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── Page title ── */
+.auth-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Flash message ── */
+.flash {
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.825rem;
+  margin-bottom: 1rem;
+}
+
+.flash--danger {
+  background: hsla(352, 55%, 48%, 0.08);
+  color: hsl(352, 55%, 38%);
+  border: 1px solid hsla(352, 55%, 48%, 0.25);
+}
+
+/* ── Inputs ── */
 .input-container {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  min-width: 25%;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.footer-container {
+.input-container label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.input-container input,
+.input-container textarea {
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-container input:focus,
+.input-container textarea:focus {
+  border-color: hsl(352, 55%, 48%);
+  box-shadow: 0 0 0 3px hsla(352, 55%, 48%, 0.12);
+}
+
+.input-error {
+  font-size: 0.75rem;
+  color: hsl(352, 55%, 45%);
+  margin-top: 0.3rem;
+}
+
+/* ── Footer row ── */
+.auth-footer {
   display: flex;
-  flex-direction: row-reverse;
+  align-items: center;
   justify-content: space-between;
+  margin-top: 1.75rem;
 }
 
-.error {
-  color: red;
-}
-
-.btn {
+.btn--submit {
+  background: hsl(352, 55%, 48%);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.btn--submit:hover {
+  filter: brightness(0.9);
+  transform: scale(1.02);
+}
+
+.btn--submit:active {
+  transform: scale(0.98);
+}
+
+/* ── Switch link ── */
+.auth-link {
+  font-size: 0.85rem;
+  color: hsl(352, 55%, 48%);
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
 }

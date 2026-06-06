@@ -1,242 +1,58 @@
+// ============ FETCH ============
+
 async function fetchAllTasks() {
   try {
-    const tasks = await fetch(`${API_URL}/api/tasks`);
-    const tasksData = await tasks.json();
-
-    if (!tasksData) {
-      return;
-    }
-    return tasksData;
+    return await apiFetch("/api/tasks");
   } catch (error) {
-    console.error("Error fetching tasks: ", error);
+    console.error("Error fetching tasks:", error);
   }
 }
+
+// ============ TASK TEMPLATE ============
+// Single template: the only difference between pending and completed was the
+// `checked` attribute — handled with a ternary instead of duplicating the HTML.
+
+function taskTemplate(task) {
+  return `
+    <article class="task-item" data-id="${task.id}">
+        <label>
+            <input class="checkbox" type="checkbox" name="progress" ${task.is_completed ? "checked" : ""}>
+        </label>
+        <div class="task-item__description">
+            <p class="task-item__name">${task.taskName}</p>
+            <small>${task.categories.category}</small>
+        </div>
+        <div class="task-item__buttons">
+            <button class="task-item_btn task-settings-icon">
+                <img src="/images/settings.png" alt="settings logo">
+            </button>
+            <button class="task-item_btn close">&#10006;</button>
+            <div class="task-item__settings">
+                <button class="task-item_btn edit">
+                    <img src="/images/edit-icon.png" alt="edit logo">
+                </button>
+                <button class="task-item_btn delete">
+                    <img src="/images/delete.png" alt="delete logo">
+                </button>
+            </div>
+        </div>
+    </article>
+  `;
+}
+
+// ============ RENDER ============
+// Replaces both createTaskList() and updateTasksHTML() — they were identical
+// except updateTasksHTML had a category filter. One function handles both cases.
 
 const $pendingTaskContainer = document.querySelector(".pending");
 const $completedTaskContainer = document.querySelector(".completed");
 
-function taskTemplate(task) {
-  if (task.is_completed == 0) {
-    return `
-      <article class="task-item">
-          <label>
-              <input class="checkbox" type="checkbox" id="${task.id}" name="progress">
-          </label>
-  
-          <div class="task-item__description">
-  
-              <p> ${task.taskName} </p>
-              <small>
-                  ${task.categories.category}
-              </small>
-  
-          </div>
-          <div class="task-item__buttons">
-  
-              <button class="task-item_btn task-settings-icon" id="task-settings">
-                  <img src="/images/settings.png" alt="settings logo">
-              </button>
-              <button class="task-item_btn close">&#10006;</button>
-  
-              <div class="task-item__settings">
-  
-                  <button class="task-item_btn edit" id="${task.id}">
-                      <img src="/images/edit-icon.png" alt="edit logo">
-                  </button>
-                  <button class="task-item_btn delete" id="${task.id}">
-                      <img src="/images/delete.png" alt="delete logo">
-                  </button>
-              </div>
-          </div>
-      </article>
-  `;
-  } else {
-    return `
-      <article class="task-item">
-          <label>
-              <input class="checkbox" type="checkbox" id="${task.id}" name="progress" checked >
-          </label>
-  
-          <div class="task-item__description">
-  
-              <p> ${task.taskName} </p>
-              <small>
-                  ${task.categories.category}
-              </small>
-  
-          </div>
-          <div class="task-item__buttons">
-  
-              <button class="task-item_btn task-settings-icon" id="task-settings">
-                  <img src="/images/settings.png" alt="settings logo">
-              </button>
-              <button class="task-item_btn close">&#10006;</button>
-  
-              <div class="task-item__settings">
-  
-                  <button class="task-item_btn edit" id="${task.id}">
-                      <img src="/images/edit-icon.png" alt="edit logo">
-                  </button>
-                  <button class="task-item_btn delete" id="${task.id}">
-                      <img src="/images/delete.png" alt="delete logo">
-                  </button>
-              </div>
-          </div>
-      </article>
-  `;
-  }
-}
-
-// ============+++ EVENT LISTENERS +++============
-
-function addClasslistForTaskSettings($target, $btnClose, $taskItem, $taskModifiers) {
-  $target.classList.add("open");
-  $btnClose.classList.add("open");
-  $taskItem.classList.add("open");
-  $taskModifiers.classList.add("open");
-}
-function removeClasslistForSettings($closeButton, $taskItem, $taskModifiers, $taskSettings) {
-  $closeButton.classList.remove("open");
-  $taskItem.classList.remove("open");
-  $taskModifiers.classList.remove("open");
-  $taskSettings.classList.remove("open");
-}
-function findTargetSettings($pendingTaskContainer) {
-  $pendingTaskContainer.addEventListener("click", function (event) {
-    const $target = event.target.closest(".task-settings-icon");
-    if ($target) {
-      console.log("hier zit ook een probleem");
-      const $taskItem = $target.closest(".task-item");
-      const $taskModifiers = $taskItem.querySelector(".task-item__settings");
-      const $btnClose = $taskItem.querySelector(".close");
-
-      addClasslistForTaskSettings($target, $btnClose, $taskItem, $taskModifiers);
-    }
-    const $closeButton = event.target.closest(".close");
-    if ($closeButton) {
-      const $taskItem = $closeButton.closest(".task-item");
-      const $taskModifiers = $taskItem.querySelector(".task-item__settings");
-      const $taskSettings = $taskItem.querySelector(".task-settings-icon");
-
-      removeClasslistForSettings($closeButton, $taskItem, $taskModifiers, $taskSettings);
-    }
-  });
-}
-function addEventListenerToTaskDelete($tasksDeleteBtns) {
-  for (const $taskDeleteBtn of $tasksDeleteBtns) {
-    $taskDeleteBtn.addEventListener("click", function (event) {
-      const $target = event.currentTarget.getAttribute("id");
-      const $targetClassName = $taskDeleteBtn.className;
-
-      openConfirmation($target, globalCategoryID, $targetClassName);
-    });
-  }
-}
-
-function openConfirmation($target, globalID, $className) {
-  const $dialog = document.querySelector(".dialog");
-  $dialog.showModal();
-  const $closeDialog = document.getElementById("close-dialog");
-  const $confirmDelete = document.getElementById("confirm-delete");
-
-  confirmDeletion($confirmDelete, $target, globalID, $dialog, $className);
-  cancelConfirm($closeDialog, $dialog);
-}
-
-async function confirmDeletion(button, $target, globalID, $dialog, $className) {
-  button.addEventListener("click", async function (event) {
-    if ($className.includes("task-item_btn")) {
-      console.log("clicked");
-      deleteTask($target, globalID);
-    } else {
-      console.log("correct");
-
-      await deleteCategory(
-        {
-          id: globalID,
-        },
-        globalID
-      );
-    }
-    $dialog.close();
-  });
-}
-
-function cancelConfirm($cancel, $dialog) {
-  $cancel.addEventListener("click", function (event) {
-    $dialog.close();
-  });
-}
-
-function addEventListenerToTaskEdit($taskEditBtns) {
-  for (const $taskEditBtn of $taskEditBtns) {
-    $taskEditBtn.addEventListener("click", function (event) {
-      const $target = event.currentTarget.getAttribute("id");
-
-      showEditTaskWindow();
-      initFormTaskEdit($target);
-    });
-  }
-}
-
-function addEventListenerToCheckBox($taskCheckboxes) {
-  for (const $checkbox of $taskCheckboxes) {
-    $checkbox.addEventListener("click", function (event) {
-      const $target = event.currentTarget.getAttribute("id");
-      shootConfettiOnCheckedStatus($checkbox);
-      setCompleteStatus($checkbox, $target);
-    });
-  }
-}
-
-function getTaskName(tasks, $target) {
-  for (const task of tasks) {
-    if (task.id == $target) {
-      return task.taskName;
-    }
-  }
-}
-
-function getTargetId($target) {
-  let myTarget = $target;
-  return myTarget;
-}
-
-function addEventListenerToTaskSettings($pendingTaskContainer, $completedTaskContainer, $tasksDeleteBtns, $taskEditBtns, $taskCheckboxes, tasks) {
-  findTargetSettings($pendingTaskContainer, $completedTaskContainer);
-  addEventListenerToTaskDelete($tasksDeleteBtns, tasks);
-  addEventListenerToTaskEdit($taskEditBtns);
-  addEventListenerToCheckBox($taskCheckboxes, tasks);
-}
-// ==========================================
-// ============+++ HTML FILL +++============
-function createTaskList(tasks) {
-  let htmlPending = "";
-  let htmlCompleted = "";
-  for (const task of tasks) {
-    if (task.is_completed == 0) {
-      htmlPending += taskTemplate(task);
-    } else {
-      htmlCompleted += taskTemplate(task);
-    }
-  }
-  $pendingTaskContainer.innerHTML = htmlPending;
-  $completedTaskContainer.innerHTML = htmlCompleted;
-
-  const $tasksDeleteBtns = document.querySelectorAll(".delete");
-  const $taskEditBtns = document.querySelectorAll(".edit");
-  const $taskCheckboxes = document.querySelectorAll(".checkbox");
-  addEventListenerToTaskSettings($pendingTaskContainer, $completedTaskContainer, $tasksDeleteBtns, $taskEditBtns, $taskCheckboxes, tasks);
-}
-
-async function updateTasksHTML(target) {
-  const tasks = await fetchAllTasks();
-
+function renderTasks(tasks, filterCategoryId = 0) {
   let htmlPending = "";
   let htmlCompleted = "";
 
   for (const task of tasks) {
-    if (target == task.category_id || target == 0) {
+    if (filterCategoryId == 0 || task.category_id == filterCategoryId) {
       if (task.is_completed == 0) {
         htmlPending += taskTemplate(task);
       } else {
@@ -248,242 +64,271 @@ async function updateTasksHTML(target) {
   $pendingTaskContainer.innerHTML = htmlPending;
   $completedTaskContainer.innerHTML = htmlCompleted;
 
-  const $tasksDeleteBtns = document.querySelectorAll(".delete");
-  const $taskEditBtns = document.querySelectorAll(".edit");
-  const $taskCheckboxes = document.querySelectorAll(".checkbox");
-  addEventListenerToTaskSettings($pendingTaskContainer, $completedTaskContainer, $tasksDeleteBtns, $taskEditBtns, $taskCheckboxes, tasks);
-
-  return [htmlPending, htmlCompleted];
+  bindTaskEvents($pendingTaskContainer);
+  bindTaskEvents($completedTaskContainer);
 }
-// ==========================================
-// ============+++ CREATE TASKS +++============
 
-async function initFormTaskCreation(categories) {
-  $formCreateTask.innerHTML = `
-  <label class="form__wrapper">
-    Select a category!
-    <select name="categories" id="categories" class="categories">
-      ${createCategoriesDropDown(categories)}
-    </select>
-    What task do you need to do?
-    <input class="form__input" id="create-task-input" type="text" required>
-  </label>
-  <button class="button form__button" id="cancel-create-task" type="button">Cancel</button>
-  <button class="button form__button" id="create-task">Create</button>
-`;
-  const $btnCancel = document.getElementById("cancel-create-task");
+async function refreshTasks(filterCategoryId = globalCategoryID) {
+  const tasks = await fetchAllTasks();
+  if (tasks) renderTasks(tasks, filterCategoryId);
+  return tasks;
+}
 
-  cancelTaskCreation($btnCancel);
+// ============ EVENT BINDING ============
+// Single delegated listener per container replaces four separate querySelector loops.
 
-  if ($formCreateTask) {
-    const $inputDropd = document.getElementById("categories");
-    const $inputField = document.getElementById("create-task-input");
-    const catArray = createCategoryArray(categories);
+function bindTaskEvents($container) {
+  $container.addEventListener("click", function (event) {
+    const $settingsBtn = event.target.closest(".task-settings-icon");
+    if ($settingsBtn) {
+      const $taskItem = $settingsBtn.closest(".task-item");
+      $settingsBtn.classList.add("open");
+      $taskItem.querySelector(".close").classList.add("open");
+      $taskItem.querySelector(".task-item__settings").classList.add("open");
+      $taskItem.classList.add("open");
+      return;
+    }
 
-    $formCreateTask.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const dropDvalue = $inputDropd.value;
-      const inputFieldValue = $inputField.value;
-      let catID = 0;
-      let catIndex = 0;
-      categories.forEach((category, index) => {
-        catArray.push(category.category);
-        if (dropDvalue == category.category) {
-          catID = category.id;
+    const $closeBtn = event.target.closest(".close");
+    if ($closeBtn) {
+      const $taskItem = $closeBtn.closest(".task-item");
+      $taskItem.querySelector(".task-settings-icon").classList.remove("open");
+      $closeBtn.classList.remove("open");
+      $taskItem.querySelector(".task-item__settings").classList.remove("open");
+      $taskItem.classList.remove("open");
+      return;
+    }
 
-          catIndex = index + 1;
-        }
-      });
+    const $deleteBtn = event.target.closest(".delete");
+    if ($deleteBtn) {
+      const taskId = $deleteBtn.closest(".task-item").dataset.id;
+      openConfirmation(taskId, globalCategoryID, "task-item_btn");
+      return;
+    }
 
-      await createNewTask({
-        taskName: inputFieldValue,
-        category_id: catID,
-        is_completed: 0,
-      });
-      $formCreateTask.reset();
-      updateCategoryTitle(catArray[catIndex]);
-      updateTasksHTML(catID);
-      hideAddTaskWindow();
-    });
+    const $editBtn = event.target.closest(".edit");
+    if ($editBtn) {
+      startInlineEditTask($editBtn.closest(".task-item"));
+      return;
+    }
+
+    const $checkbox = event.target.closest(".checkbox");
+    if ($checkbox) {
+      const taskId = $checkbox.closest(".task-item").dataset.id;
+      shootConfettiOnCheckedStatus($checkbox);
+      setCompleteStatus($checkbox, taskId);
+    }
+  });
+}
+
+// ============ INLINE EDIT (TASK) ============
+// Replaces the shared modal form — editing now happens inside the task component.
+
+function startInlineEditTask($taskItem) {
+  if ($taskItem.classList.contains("editing")) return;
+  $taskItem.classList.add("editing");
+
+  const $description = $taskItem.querySelector(".task-item__description");
+  const currentName = $taskItem.querySelector(".task-item__name").textContent.trim();
+  const taskId = $taskItem.dataset.id;
+
+  $description.innerHTML = `
+    <input class="form__input task-item__edit-input" type="text" value="${currentName}">
+    <div class="task-item__edit-actions">
+      <button class="button form__button task-edit-save" type="button">OK</button>
+      <button class="button form__button task-edit-cancel" type="button">Cancel</button>
+    </div>
+  `;
+
+  const $input = $description.querySelector(".task-item__edit-input");
+  const $saveBtn = $description.querySelector(".task-edit-save");
+  const $cancelBtn = $description.querySelector(".task-edit-cancel");
+
+  $input.focus();
+  $input.select();
+
+  $saveBtn.addEventListener("click", async function () {
+    const newName = $input.value.trim();
+    if (newName && newName !== currentName) {
+      await patchTask(taskId, { taskName: newName });
+      showToast("Task updated");
+    }
+    await refreshTasks();
+  });
+
+  $cancelBtn.addEventListener("click", async function () {
+    await refreshTasks();
+  });
+
+  $input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") $saveBtn.click();
+    if (e.key === "Escape") $cancelBtn.click();
+  });
+}
+
+// ============ CRUD ============
+// patchTask replaces both editTask() and changeCompleteStatus() — both were
+// identical fetch wrappers that PATCH the same endpoint.
+
+async function patchTask(id, content) {
+  try {
+    return await apiFetch(`/api/tasks/${id}`, "PATCH", content);
+  } catch (error) {
+    console.error("Error updating task:", error);
   }
 }
 
 async function createNewTask(content) {
   try {
-    const response = await fetch(`${API_URL}/api/tasks`, {
-      method: "POST",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-    const tasks = await fetchAllTasks();
-    const categories = await fetchCategories();
+    const data = await apiFetch("/api/tasks", "POST", content);
+    showToast("Task created!");
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
     createCategoriesList(categories, tasks);
-
     return data;
   } catch (error) {
-    console.error("Something went wrong: " + error);
+    console.error("Error creating task:", error);
   }
 }
 
-// ==========================================
-// ============+++ DELETE TASKS +++============
 async function deleteTask(itemID, categoryID) {
   try {
-    const response = await fetch(`${API_URL}/api/tasks/${itemID}`, {
-      method: "DELETE",
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-    const tasks = await fetchAllTasks();
-    const categories = await fetchCategories();
-
-    updateTasksHTML(categoryID);
+    await apiFetch(`/api/tasks/${itemID}`, "DELETE");
+    const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
     createCategoriesList(categories, tasks);
+    renderTasks(tasks, categoryID);
   } catch (error) {
-    console.error("Something went wrong: " + error);
+    console.error("Error deleting task:", error);
   }
 }
+
+async function setCompleteStatus($checkbox, taskId) {
+  await patchTask(taskId, { is_completed: $checkbox.checked ? 1 : 0 });
+  refreshTasks();
+}
+
+// ============ CREATE TASK FORM ============
 
 const $btnAddTask = document.querySelector(".btn-add-task");
 const $formCreateTask = document.getElementById("form-task");
-const $btnCancelEdit = document.getElementById("cancel-edit-task");
-const $editForm = document.querySelector(".form-edit");
 
-// ==========================================
-// ============+++ EDIT TASKS +++============
-async function initFormTaskEdit($target) {
-  if ($editForm) {
-    $editForm.addEventListener("submit", async function (event) {
-      event.preventDefault();
-      const $taskName = $editForm.querySelector(".form__input");
+async function initFormTaskCreation(categories) {
+  const $existingSelect = $formCreateTask.querySelector("#categories");
 
-      await editTask(
-        {
-          taskName: $taskName.value,
-        },
-        $target
-      );
-
-      $editForm.reset();
-      updateTasksHTML(globalCategoryID);
-      hideEditTaskWindow();
-      window.location.reload();
-    });
-  }
-}
-
-async function editTask(content, id) {
-  try {
-    const response = await fetch(`${API_URL}/api/tasks/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
-
-    console.log(data);
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-    return data;
-  } catch (error) {
-    console.error("Something went wrong: " + error);
-  }
-}
-// ==========================================
-// ============+++ COMPLETE A TASK +++============
-async function setCompleteStatus($checkbox, taskID) {
-  const checkboxStatus = $checkbox.checked;
-  if (checkboxStatus) {
-    await changeCompleteStatus(
-      {
-        is_completed: 1,
-      },
-      taskID
-    );
-  } else {
-    await changeCompleteStatus(
-      {
-        is_completed: 0,
-      },
-      taskID
-    );
+  if ($existingSelect) {
+    // Form already built — only refresh the dropdown options
+    $existingSelect.innerHTML = createCategoriesDropDown(categories);
+    preselectActiveCategory($existingSelect);
+    return;
   }
 
-  updateTasksHTML(globalCategoryID);
-}
+  $formCreateTask.innerHTML = `
+    <h3 class="form__title">New task</h3>
+    <div class="form__field">
+      <label class="form__label" for="categories">Category</label>
+      <select class="form__input" name="categories" id="categories">
+        ${createCategoriesDropDown(categories)}
+      </select>
+    </div>
+    <div class="form__field">
+      <label class="form__label" for="create-task-input">Task name</label>
+      <input class="form__input" id="create-task-input" type="text" placeholder="What do you need to do?" required>
+    </div>
+    <div class="form__actions">
+      <button class="form__btn form__btn--cancel" id="cancel-create-task" type="button">Cancel</button>
+      <button class="form__btn form__btn--submit" id="create-task">Create</button>
+    </div>
+  `;
 
-async function changeCompleteStatus(content, id) {
-  try {
-    const response = await fetch(`${API_URL}/api/tasks/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(content),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  preselectActiveCategory($formCreateTask.querySelector("#categories"));
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error: ${data.message || "Unknown error"}`);
-    }
-    return data;
-  } catch (error) {
-    console.error("Something went wrong: " + error);
-  }
-}
-
-// ==========================================
-// ============+++ OPEN SETTINGS +++============
-
-function cancelTaskCreation($btnCancel) {
-  $btnCancel.addEventListener("click", function (event) {
-    setTimeout(() => {
-      hideAddTaskWindow();
-    }, 10);
+  $formCreateTask.querySelector("#cancel-create-task").addEventListener("click", function () {
+    setTimeout(() => hideAddTaskWindow(), 10);
   });
+
+  $formCreateTask.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const catID = parseInt($formCreateTask.querySelector("#categories").value);
+    const taskName = $formCreateTask.querySelector("#create-task-input").value;
+
+    await createNewTask({ taskName, category_id: catID, is_completed: 0 });
+    $formCreateTask.reset();
+    await refreshTasks(catID);
+    hideAddTaskWindow();
+  });
+}
+
+function preselectActiveCategory($select) {
+  if ($select && globalCategoryID != 0) {
+    $select.value = String(globalCategoryID);
+  }
 }
 
 function showAddTaskWindow() {
   $formCreateTask.classList.add("show");
 }
+
 function hideAddTaskWindow() {
   $formCreateTask.classList.remove("show");
 }
 
-function showEditTaskWindow() {
-  $editForm.classList.add("show");
-}
-function hideEditTaskWindow() {
-  $editForm.classList.remove("show");
-}
-
-$btnAddTask.addEventListener("click", async function (event) {
+$btnAddTask.addEventListener("click", async function () {
   const categories = await fetchCategories();
-
-  createCategoriesDropDown(categories);
-  showAddTaskWindow(categories);
+  await initFormTaskCreation(categories);
+  preselectActiveCategory($formCreateTask.querySelector("#categories"));
+  showAddTaskWindow();
 });
 
-$btnCancelEdit.addEventListener("click", function (event) {
-  hideEditTaskWindow();
-});
+// ============ CONFIRMATION DIALOG ============
+// Fixed the stacking-listener bug: the confirm button is cloned before adding
+// a new listener so previous handlers are always discarded.
 
-// ==========================================
+function openConfirmation(targetId, globalID, className) {
+  const $dialog = document.querySelector(".dialog");
+  $dialog.showModal();
+
+  const $oldConfirm = document.getElementById("confirm-delete");
+  const $confirmDelete = $oldConfirm.cloneNode(true);
+  $oldConfirm.replaceWith($confirmDelete);
+
+  const $oldClose = document.getElementById("close-dialog");
+  const $closeDialog = $oldClose.cloneNode(true);
+  $oldClose.replaceWith($closeDialog);
+
+  $confirmDelete.addEventListener("click", async function () {
+    if (className.includes("task-item_btn")) {
+      await deleteTask(targetId, globalID);
+    } else {
+      await deleteCategory({ id: globalID }, globalID);
+    }
+    $dialog.close();
+  });
+
+  $closeDialog.addEventListener("click", function () {
+    $dialog.close();
+  });
+}
+
+// ============ INIT ============
+// Moved here (second script) so all functions from both files are available
+// before the IIFE runs, allowing Promise.all for parallel fetches.
+
+(async function init() {
+  const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
+
+  renderTasks(tasks, 0);
+  initFormCategoryCreation();
+  initFormTaskCreation(categories);
+  createCategoriesList(categories, tasks);
+
+  const urlParts = window.location.pathname.split("/");
+  if (urlParts.length >= 3 && urlParts[1] === "category") {
+    const id = urlParts[2];
+    const $article = document.getElementById("category-nav-" + id);
+    if ($article) {
+      makeActive($article);
+      updateCategoryTitle($article.dataset.title);
+      renderTasks(tasks, id);
+      globalCategoryID = id;
+    }
+  }
+})();
