@@ -63,9 +63,6 @@ function renderTasks(tasks, filterCategoryId = 0) {
 
   $pendingTaskContainer.innerHTML = htmlPending;
   $completedTaskContainer.innerHTML = htmlCompleted;
-
-  bindTaskEvents($pendingTaskContainer);
-  bindTaskEvents($completedTaskContainer);
 }
 
 async function refreshTasks(filterCategoryId = globalCategoryID) {
@@ -313,6 +310,9 @@ function openConfirmation(targetId, globalID, className) {
 // before the IIFE runs, allowing Promise.all for parallel fetches.
 
 (async function init() {
+  bindTaskEvents($pendingTaskContainer);
+  bindTaskEvents($completedTaskContainer);
+
   const [categories, tasks] = await Promise.all([fetchCategories(), fetchAllTasks()]);
 
   renderTasks(tasks, 0);
