@@ -39,7 +39,7 @@ Alle statische elementen worden gerenderd met EJS, terwijl dynamische data wordt
    npx knex migrate:latest # Maakt de tabellen aan npx knex seed:run # Vult de tabellen met data
 
 5. Start de applicatie:
-   npm run start
+   npm run start:dev
 
 6. Registreer een gebruiker of gebruik een van de bestaande gebruikers:
    Gebruiker 1: Email: info@gmail.com Wachtwoord: qwerty
@@ -76,16 +76,6 @@ Gebruiker 2: Email: pizza@gmail.com Wachtwoord: poiuyt
 
 ---
 
-## ⚠️ Bugs & Toekomstige Verbeteringen
-
-- Er worden momenteel teveel event listeners gebruikt, waardoor sommige acties dubbel of meerdere keren uitgevoerd worden.
-- Een tijdelijke oplossing is toegepast waarbij de pagina herlaadt na het selecteren of updaten van een categorie.
-- Bij het aanpassen van de status van een taak wordt er niet correct teruggenavigeerd en wordt standaard de "All Tasks"-categorie getoond.
-
----
-
 ## ✨ Author
 
 Tomasz Liksza
-
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Br5Hzwf0)
