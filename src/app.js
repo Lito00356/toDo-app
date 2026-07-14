@@ -12,7 +12,7 @@ import AuthLoginValidation from "./middleware/validation/AuthLoginValidation.js"
 import jwtAuth from "./middleware/jwtAuth.js";
 import cookieParser from "cookie-parser";
 
-const port = 2007;
+const port = process.env.PORT || 2007;
 const app = express();
 
 Object.assign(app.locals, helpers);
