@@ -8,10 +8,6 @@ async function fetchAllTasks() {
   }
 }
 
-// ============ TASK TEMPLATE ============
-// Single template: the only difference between pending and completed was the
-// `checked` attribute — handled with a ternary instead of duplicating the HTML.
-
 function taskTemplate(task) {
   return `
     <article class="task-item" data-id="${task.id}">
@@ -40,10 +36,6 @@ function taskTemplate(task) {
   `;
 }
 
-// ============ RENDER ============
-// Replaces both createTaskList() and updateTasksHTML() — they were identical
-// except updateTasksHTML had a category filter. One function handles both cases.
-
 const $pendingTaskContainer = document.querySelector(".pending");
 const $completedTaskContainer = document.querySelector(".completed");
 
@@ -70,9 +62,6 @@ async function refreshTasks(filterCategoryId = globalCategoryID) {
   if (tasks) renderTasks(tasks, filterCategoryId);
   return tasks;
 }
-
-// ============ EVENT BINDING ============
-// Single delegated listener per container replaces four separate querySelector loops.
 
 function bindTaskEvents($container) {
   $container.addEventListener("click", function (event) {
@@ -118,9 +107,6 @@ function bindTaskEvents($container) {
   });
 }
 
-// ============ INLINE EDIT (TASK) ============
-// Replaces the shared modal form — editing now happens inside the task component.
-
 function startInlineEditTask($taskItem) {
   if ($taskItem.classList.contains("editing")) return;
   $taskItem.classList.add("editing");
@@ -162,10 +148,6 @@ function startInlineEditTask($taskItem) {
     if (e.key === "Escape") $cancelBtn.click();
   });
 }
-
-// ============ CRUD ============
-// patchTask replaces both editTask() and changeCompleteStatus() — both were
-// identical fetch wrappers that PATCH the same endpoint.
 
 async function patchTask(id, content) {
   try {
@@ -212,7 +194,6 @@ async function initFormTaskCreation(categories) {
   const $existingSelect = $formCreateTask.querySelector("#categories");
 
   if ($existingSelect) {
-    // Form already built — only refresh the dropdown options
     $existingSelect.innerHTML = createCategoriesDropDown(categories);
     preselectActiveCategory($existingSelect);
     return;
@@ -275,10 +256,6 @@ $btnAddTask.addEventListener("click", async function () {
   showAddTaskWindow();
 });
 
-// ============ CONFIRMATION DIALOG ============
-// Fixed the stacking-listener bug: the confirm button is cloned before adding
-// a new listener so previous handlers are always discarded.
-
 function openConfirmation(targetId, globalID, className) {
   const $dialog = document.querySelector(".dialog");
   $dialog.showModal();
@@ -304,10 +281,6 @@ function openConfirmation(targetId, globalID, className) {
     $dialog.close();
   });
 }
-
-// ============ INIT ============
-// Moved here (second script) so all functions from both files are available
-// before the IIFE runs, allowing Promise.all for parallel fetches.
 
 (async function init() {
   bindTaskEvents($pendingTaskContainer);

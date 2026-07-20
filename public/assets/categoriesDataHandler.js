@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:2007";
+const API_URL = "";
 
 // ============ TOAST ============
 
